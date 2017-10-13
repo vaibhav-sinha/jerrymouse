@@ -1,5 +1,6 @@
 package com.github.vaibhavsinha.jerrymouse;
 
+import com.github.vaibhavsinha.jerrymouse.util.ConfigUtils;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -9,42 +10,35 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.oio.OioServerSocketChannel;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
-import org.apache.commons.cli.*;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.cli.ParseException;
+
+import java.io.IOException;
 
 /**
  * Created by vaibhav on 13/10/17.
  */
+@Slf4j
 public class JerryMouse {
 
     private ChannelFuture future;
 
-    public static void main(String[] args) throws ParseException, InterruptedException {
+    public static void main(String[] args) throws ParseException, InterruptedException, IOException {
         JerryMouse jerryMouse = new JerryMouse();
         jerryMouse.setupShutdownHook();
-        jerryMouse.run(getOptions(args));
+        jerryMouse.run();
     }
 
-    private static CommandLine getOptions(String[] args) throws ParseException {
-        Options options = new Options();
-        options.addOption("host", true, "The IP address of the interface to listen for connections on. If empty, bind to localhost");
-        options.addOption("port", true, "The port to start the server on. If empty, defaults to 8080");
-
-        CommandLineParser parser = new DefaultParser();
-        return parser.parse( options, args);
-    }
-
-    private void run(CommandLine cmd) throws InterruptedException {
-        String host = cmd.getOptionValue("host", "localhost");
-        Integer port = Integer.valueOf(cmd.getOptionValue("port", "8080"));
-
+    private void run() throws InterruptedException {
         EventLoopGroup eventLoopGroup = new OioEventLoopGroup();
-        ServerBootstrap bootstrap = new ServerBootstrap().group(eventLoopGroup).localAddress(host, port).channel(OioServerSocketChannel.class).childHandler(new ChannelInitializer<SocketChannel>() {
+        ServerBootstrap bootstrap = new ServerBootstrap().group(eventLoopGroup).localAddress(ConfigUtils.config.getHost(), ConfigUtils.config.getPort()).channel(OioServerSocketChannel.class).childHandler(new ChannelInitializer<SocketChannel>() {
             @Override
             protected void initChannel(SocketChannel ch) throws Exception {
                 ch.pipeline().addLast(new HttpServerCodec()).addLast(new HttpObjectAggregator(512 * 1024)).addLast(new HttpRequestChannelHandler());
             }
         });
         future = bootstrap.bind().sync();
+        log.info("Server started on port " + ConfigUtils.config.getPort());
     }
 
     private void setupShutdownHook() {
