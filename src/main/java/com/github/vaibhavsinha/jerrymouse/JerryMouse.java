@@ -1,6 +1,7 @@
 package com.github.vaibhavsinha.jerrymouse;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.oio.OioEventLoopGroup;
@@ -15,8 +16,11 @@ import org.apache.commons.cli.*;
  */
 public class JerryMouse {
 
+    private ChannelFuture future;
+
     public static void main(String[] args) throws ParseException, InterruptedException {
         JerryMouse jerryMouse = new JerryMouse();
+        jerryMouse.setupShutdownHook();
         jerryMouse.run(getOptions(args));
     }
 
@@ -40,6 +44,14 @@ public class JerryMouse {
                 ch.pipeline().addLast(new HttpServerCodec()).addLast(new HttpObjectAggregator(512 * 1024)).addLast(new HttpRequestChannelHandler());
             }
         });
-        bootstrap.bind().sync();
+        future = bootstrap.bind().sync();
+    }
+
+    private void setupShutdownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if(future != null && future.channel().isActive()) {
+                future.channel().close();
+            }
+        }));
     }
 }
