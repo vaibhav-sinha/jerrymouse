@@ -13,6 +13,7 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.ParseException;
 
+import javax.servlet.ServletException;
 import java.io.IOException;
 
 /**
@@ -23,18 +24,19 @@ public class JerryMouse {
 
     private ChannelFuture future;
 
-    public static void main(String[] args) throws ParseException, InterruptedException, IOException {
+    public static void main(String[] args) throws ParseException, InterruptedException, IOException, ClassNotFoundException, InstantiationException, ServletException, IllegalAccessException {
         JerryMouse jerryMouse = new JerryMouse();
         jerryMouse.setupShutdownHook();
         jerryMouse.run();
     }
 
-    private void run() throws InterruptedException {
+    private void run() throws InterruptedException, ClassNotFoundException, InstantiationException, IllegalAccessException, ServletException, IOException {
+        ServletRequestChannelHandler servletRequestChannelHandler = new ServletRequestChannelHandler();
         EventLoopGroup eventLoopGroup = new OioEventLoopGroup();
         ServerBootstrap bootstrap = new ServerBootstrap().group(eventLoopGroup).localAddress(ConfigUtils.config.getHost(), ConfigUtils.config.getPort()).channel(OioServerSocketChannel.class).childHandler(new ChannelInitializer<SocketChannel>() {
             @Override
             protected void initChannel(SocketChannel ch) throws Exception {
-                ch.pipeline().addLast(new HttpServerCodec()).addLast(new HttpObjectAggregator(512 * 1024)).addLast(new ServletRequestChannelHandler());
+                ch.pipeline().addLast(new HttpServerCodec()).addLast(new HttpObjectAggregator(512 * 1024)).addLast(servletRequestChannelHandler);
             }
         });
         future = bootstrap.bind().sync();

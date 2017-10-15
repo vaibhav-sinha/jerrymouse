@@ -9,6 +9,7 @@ import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 
 import javax.servlet.*;
 import javax.servlet.http.*;
+import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -22,10 +23,16 @@ import java.util.stream.Collectors;
 public class JerryMouseServletRequest implements HttpServletRequest {
 
     private FullHttpRequest fullHttpRequest;
+    private String pathInfo;
+    private String servletPath;
 
 
     public JerryMouseServletRequest() {
 
+    }
+
+    public void setServletPath(String servletPath) {
+        this.servletPath = servletPath;
     }
 
     public JerryMouseServletRequest(FullHttpRequest request) {
@@ -75,7 +82,7 @@ public class JerryMouseServletRequest implements HttpServletRequest {
 
     @Override
     public String getPathInfo() {
-        return null;
+        return pathInfo;
     }
 
     @Override
@@ -126,7 +133,7 @@ public class JerryMouseServletRequest implements HttpServletRequest {
 
     @Override
     public String getServletPath() {
-        return null;
+        return servletPath.endsWith("/") ? servletPath.substring(0, servletPath.length() - 1) : servletPath;
     }
 
     @Override
@@ -382,5 +389,9 @@ public class JerryMouseServletRequest implements HttpServletRequest {
     @Override
     public DispatcherType getDispatcherType() {
         return null;
+    }
+
+    public void setPathInfo(String pathInfo) {
+        this.pathInfo = pathInfo;
     }
 }
