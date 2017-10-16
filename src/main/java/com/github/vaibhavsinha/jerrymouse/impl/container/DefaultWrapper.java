@@ -1,6 +1,8 @@
 package com.github.vaibhavsinha.jerrymouse.impl.container;
 
 import com.github.vaibhavsinha.jerrymouse.model.JerryMouseServletConfig;
+import com.github.vaibhavsinha.jerrymouse.model.api.Lifecycle;
+import com.github.vaibhavsinha.jerrymouse.model.api.LifecycleException;
 import com.github.vaibhavsinha.jerrymouse.model.api.Wrapper;
 import com.github.vaibhavsinha.jerrymouse.model.descriptor.ServletType;
 import com.github.vaibhavsinha.jerrymouse.util.ConfigUtils;
@@ -16,6 +18,7 @@ public class DefaultWrapper extends DefaultAbstractContainer implements Wrapper 
     private ServletType servletObj;
     private ServletContext servletContext;
     private Servlet instance;
+    private Boolean started = false;
 
     @Override
     public void setServletObj(ServletType servletObj) {
@@ -54,11 +57,35 @@ public class DefaultWrapper extends DefaultAbstractContainer implements Wrapper 
     }
 
     @Override
-    public void init() throws Exception {
+    public void start() throws LifecycleException {
+        if(started) {
+            throw new LifecycleException(new Throwable("Container already started"));
+        }
+        lifecycleSupport.fireLifecycleEvent(Lifecycle.BEFORE_START_EVENT, null);
+        started = true;
         setName(servletObj.getServletName().getValue());
         if(servletObj.getLoadOnStartup().equals("1")) {
-            load();
+            try {
+                load();
+            } catch (Exception e) {
+                throw new LifecycleException(e);
+            }
         }
+        lifecycleSupport.fireLifecycleEvent(Lifecycle.START_EVENT, null);
+        lifecycleSupport.fireLifecycleEvent(Lifecycle.AFTER_START_EVENT, null);
     }
 
+    @Override
+    public void stop() throws LifecycleException {
+        if(!started) {
+            throw new LifecycleException(new Throwable("Container not started"));
+        }
+        lifecycleSupport.fireLifecycleEvent(Lifecycle.BEFORE_STOP_EVENT, null);
+        started = false;
+        if(instance != null) {
+            instance.destroy();
+        }
+        lifecycleSupport.fireLifecycleEvent(Lifecycle.STOP_EVENT, null);
+        lifecycleSupport.fireLifecycleEvent(Lifecycle.AFTER_STOP_EVENT, null);
+    }
 }

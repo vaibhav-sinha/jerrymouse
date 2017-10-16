@@ -1,6 +1,9 @@
 package com.github.vaibhavsinha.jerrymouse.impl.container;
 
 import com.github.vaibhavsinha.jerrymouse.model.api.Container;
+import com.github.vaibhavsinha.jerrymouse.model.api.Lifecycle;
+import com.github.vaibhavsinha.jerrymouse.model.api.LifecycleListener;
+import com.github.vaibhavsinha.jerrymouse.model.api.LifecycleSupport;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -15,6 +18,8 @@ public abstract class DefaultAbstractContainer implements Container {
     protected String name;
     protected Container parent;
     protected List<Container> children = new ArrayList<>();
+    protected LifecycleSupport lifecycleSupport = new LifecycleSupport(this);
+
 
     @Override
     public void addChild(Container child) {
@@ -56,4 +61,22 @@ public abstract class DefaultAbstractContainer implements Container {
         this.parent = parent;
     }
 
+    @Override
+    public void addLifecycleListener(LifecycleListener listener) {
+        lifecycleSupport.addLifecycleListener(listener);
+    }
+
+    @Override
+    public LifecycleListener[] findLifecycleListeners() {
+        return lifecycleSupport.findLifecycleListeners();
+    }
+
+    @Override
+    public void removeLifecycleListener(LifecycleListener listener) {
+        lifecycleSupport.removeLifecycleListener(listener);
+    }
+
+    public void fireLifecycleEvent(String type, Object data) {
+        lifecycleSupport.fireLifecycleEvent(type, data);
+    }
 }

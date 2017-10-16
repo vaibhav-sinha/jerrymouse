@@ -1,8 +1,7 @@
 package com.github.vaibhavsinha.jerrymouse.impl.container;
 
 import com.github.vaibhavsinha.jerrymouse.impl.connector.DefaultConnectorServletRequest;
-import com.github.vaibhavsinha.jerrymouse.model.api.Container;
-import com.github.vaibhavsinha.jerrymouse.model.api.Mapper;
+import com.github.vaibhavsinha.jerrymouse.model.api.*;
 import com.github.vaibhavsinha.jerrymouse.model.descriptor.ServletMappingType;
 import com.github.vaibhavsinha.jerrymouse.model.descriptor.UrlPatternType;
 import com.github.vaibhavsinha.jerrymouse.util.ConfigUtils;
@@ -18,7 +17,9 @@ import java.util.List;
 public class DefaultMapper implements Mapper {
 
     private Container container;
+    private LifecycleSupport lifecycleSupport = new LifecycleSupport(this);
     private List<ServletMappingType> mappingTypeList = new ArrayList<>();
+    private Boolean started = false;
 
     @Override
     public Container getContainer() {
@@ -50,11 +51,6 @@ public class DefaultMapper implements Mapper {
     }
 
     @Override
-    public void init() {
-
-    }
-
-    @Override
     public void addServletMapping(ServletMappingType servletMappingType) {
         mappingTypeList.add(servletMappingType);
     }
@@ -80,5 +76,42 @@ public class DefaultMapper implements Mapper {
                 }
         }
         return null;
+    }
+
+    @Override
+    public void addLifecycleListener(LifecycleListener listener) {
+        lifecycleSupport.addLifecycleListener(listener);
+    }
+
+    @Override
+    public LifecycleListener[] findLifecycleListeners() {
+        return lifecycleSupport.findLifecycleListeners();
+    }
+
+    @Override
+    public void removeLifecycleListener(LifecycleListener listener) {
+        lifecycleSupport.removeLifecycleListener(listener);
+    }
+
+    @Override
+    public void start() throws LifecycleException {
+        if(started) {
+            throw new LifecycleException(new Throwable("Container already started"));
+        }
+        lifecycleSupport.fireLifecycleEvent(Lifecycle.BEFORE_START_EVENT, null);
+        started = true;
+        lifecycleSupport.fireLifecycleEvent(Lifecycle.START_EVENT, null);
+        lifecycleSupport.fireLifecycleEvent(Lifecycle.AFTER_START_EVENT, null);
+    }
+
+    @Override
+    public void stop() throws LifecycleException {
+        if(!started) {
+            throw new LifecycleException(new Throwable("Container not started"));
+        }
+        lifecycleSupport.fireLifecycleEvent(Lifecycle.BEFORE_STOP_EVENT, null);
+        started = false;
+        lifecycleSupport.fireLifecycleEvent(Lifecycle.STOP_EVENT, null);
+        lifecycleSupport.fireLifecycleEvent(Lifecycle.AFTER_STOP_EVENT, null);
     }
 }

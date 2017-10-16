@@ -33,5 +33,4 @@ public class ServletRequestChannelHandler extends ChannelInboundHandlerAdapter {
         ctx.writeAndFlush(servletResponse.getFullHttpResponse());
         ((FullHttpRequest) msg).release();
     }
-
 }

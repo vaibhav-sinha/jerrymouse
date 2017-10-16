@@ -28,7 +28,7 @@ public class JerryMouse {
         container = new DefaultContext();
         container.setName("Root Context");
         ((DefaultContext) container).setWebAppObj(ConfigUtils.webApp);
-        container.init();
+        container.start();
 
         connector = new DefaultHttpConnector();
         connector.setContainer(container);
@@ -39,6 +39,7 @@ public class JerryMouse {
     private void setupShutdownHook() {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
+                container.stop();
                 connector.stop();
             } catch (Exception e) {
                 throw new RuntimeException(e);

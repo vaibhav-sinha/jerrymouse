@@ -8,7 +8,7 @@ import java.io.IOException;
 /**
  * Created by vaibhav on 16/10/17.
  */
-public interface Container {
+public interface Container extends Lifecycle {
 
     void addChild(Container child);
     void removeChild(Container child);
@@ -19,5 +19,4 @@ public interface Container {
     Container getParent();
     void setParent(Container parent);
     void invoke(ServletRequest request, ServletResponse response) throws ServletException, IOException;
-    void init() throws Exception;
 }

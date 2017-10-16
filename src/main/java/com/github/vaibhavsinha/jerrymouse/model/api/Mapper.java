@@ -7,11 +7,10 @@ import javax.servlet.ServletRequest;
 /**
  * Created by vaibhav on 16/10/17.
  */
-public interface Mapper {
+public interface Mapper extends Lifecycle {
 
     Container getContainer();
     void setContainer(Container container);
     Container map(ServletRequest request);
-    void init();
     void addServletMapping(ServletMappingType servletMappingType);
 }

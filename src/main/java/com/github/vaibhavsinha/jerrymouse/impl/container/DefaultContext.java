@@ -2,10 +2,7 @@ package com.github.vaibhavsinha.jerrymouse.impl.container;
 
 import com.github.vaibhavsinha.jerrymouse.ApplicationContext;
 import com.github.vaibhavsinha.jerrymouse.impl.connector.DefaultConnectorServletResponse;
-import com.github.vaibhavsinha.jerrymouse.model.api.Container;
-import com.github.vaibhavsinha.jerrymouse.model.api.Context;
-import com.github.vaibhavsinha.jerrymouse.model.api.Mapper;
-import com.github.vaibhavsinha.jerrymouse.model.api.Wrapper;
+import com.github.vaibhavsinha.jerrymouse.model.api.*;
 import com.github.vaibhavsinha.jerrymouse.model.descriptor.*;
 import com.github.vaibhavsinha.jerrymouse.util.ConfigUtils;
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -17,6 +14,7 @@ import javax.xml.bind.JAXBElement;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EventListener;
 import java.util.List;
 
@@ -29,6 +27,7 @@ public class DefaultContext extends DefaultAbstractContainer implements Context 
     private Mapper mapper;
     private ApplicationContext applicationContext;
     private List<EventListener> eventListeners = new ArrayList<>();
+    private boolean started = false;
 
 
     @Override
@@ -46,7 +45,17 @@ public class DefaultContext extends DefaultAbstractContainer implements Context 
     }
 
     @Override
-    public void init() throws Exception {
+    public void setWebAppObj(WebAppType webAppObj) {
+        this.webAppObj = webAppObj;
+    }
+
+    @Override
+    public void start() throws LifecycleException {
+        if(started) {
+            throw new LifecycleException(new Throwable("Container already started"));
+        }
+        lifecycleSupport.fireLifecycleEvent(Lifecycle.BEFORE_START_EVENT, null);
+        started = true;
         mapper = new DefaultMapper();
         mapper.setContainer(this);
 
@@ -60,21 +69,37 @@ public class DefaultContext extends DefaultAbstractContainer implements Context 
                 wrapper.setServletContext(applicationContext);
                 wrapper.setServletObj((ServletType) obj.getValue());
                 wrapper.setParent(this);
-                wrapper.init();
+                wrapper.start();
                 addChild(wrapper);
             }
             if(obj.getDeclaredType() == ListenerType.class) {
-                Class<EventListener> listenerClass = (Class<EventListener>) ConfigUtils.loader.loadClass(((ListenerType) obj.getValue()).getListenerClass().getValue());
-                eventListeners.add(listenerClass.newInstance());
+                try {
+                    Class<EventListener> listenerClass = (Class<EventListener>) ConfigUtils.loader.loadClass(((ListenerType) obj.getValue()).getListenerClass().getValue());
+                    eventListeners.add(listenerClass.newInstance());
+                } catch (Exception e) {
+                    throw new LifecycleException(e);
+                }
             }
             if(obj.getDeclaredType() == ServletMappingType.class) {
                 mapper.addServletMapping((ServletMappingType) obj.getValue());
             }
         }
+        lifecycleSupport.fireLifecycleEvent(Lifecycle.START_EVENT, null);
+        lifecycleSupport.fireLifecycleEvent(Lifecycle.AFTER_START_EVENT, null);
     }
 
     @Override
-    public void setWebAppObj(WebAppType webAppObj) {
-        this.webAppObj = webAppObj;
+    public void stop() throws LifecycleException {
+        if(!started) {
+            throw new LifecycleException(new Throwable("Container not started"));
+        }
+        lifecycleSupport.fireLifecycleEvent(Lifecycle.BEFORE_STOP_EVENT, null);
+        started = false;
+        mapper.stop();
+        for(Container child : findChildren()) {
+            child.stop();
+        }
+        lifecycleSupport.fireLifecycleEvent(Lifecycle.STOP_EVENT, null);
+        lifecycleSupport.fireLifecycleEvent(Lifecycle.AFTER_STOP_EVENT, null);
     }
 }
