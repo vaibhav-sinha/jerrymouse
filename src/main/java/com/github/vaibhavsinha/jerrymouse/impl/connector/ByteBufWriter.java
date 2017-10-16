@@ -1,4 +1,4 @@
-package com.github.vaibhavsinha.jerrymouse.model;
+package com.github.vaibhavsinha.jerrymouse.impl.connector;
 
 import io.netty.buffer.ByteBuf;
 

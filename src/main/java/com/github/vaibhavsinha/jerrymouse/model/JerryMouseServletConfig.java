@@ -2,7 +2,6 @@ package com.github.vaibhavsinha.jerrymouse.model;
 
 import com.github.vaibhavsinha.jerrymouse.ApplicationContext;
 import com.github.vaibhavsinha.jerrymouse.model.descriptor.ParamValueType;
-import com.github.vaibhavsinha.jerrymouse.model.descriptor.ServletType;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -18,7 +17,7 @@ public class JerryMouseServletConfig implements ServletConfig {
 
     private String name;
     private List<ParamValueType> paramValueTypeList;
-    private ApplicationContext applicationContext;
+    private ServletContext servletContext;
 
     public void setName(String name) {
         this.name = name;
@@ -28,8 +27,8 @@ public class JerryMouseServletConfig implements ServletConfig {
         this.paramValueTypeList = paramValueTypeList;
     }
 
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
+    public void setServletContext(ServletContext servletContext) {
+        this.servletContext = servletContext;
     }
 
     @Override
@@ -39,7 +38,7 @@ public class JerryMouseServletConfig implements ServletConfig {
 
     @Override
     public ServletContext getServletContext() {
-        return applicationContext;
+        return servletContext;
     }
 
     @Override

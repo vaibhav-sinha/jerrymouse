@@ -1,15 +1,13 @@
-package com.github.vaibhavsinha.jerrymouse.model;
+package com.github.vaibhavsinha.jerrymouse.impl.connector;
 
+import com.github.vaibhavsinha.jerrymouse.impl.connector.ByteBufServletInputStream;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.QueryStringDecoder;
-import io.netty.handler.codec.http.cookie.CookieDecoder;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 
 import javax.servlet.*;
 import javax.servlet.http.*;
-import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -20,14 +18,14 @@ import java.util.stream.Collectors;
 /**
  * Created by vaibhav on 14/10/17.
  */
-public class JerryMouseServletRequest implements HttpServletRequest {
+public class DefaultConnectorServletRequest implements HttpServletRequest {
 
     private FullHttpRequest fullHttpRequest;
     private String pathInfo;
     private String servletPath;
 
 
-    public JerryMouseServletRequest() {
+    public DefaultConnectorServletRequest() {
 
     }
 
@@ -35,7 +33,7 @@ public class JerryMouseServletRequest implements HttpServletRequest {
         this.servletPath = servletPath;
     }
 
-    public JerryMouseServletRequest(FullHttpRequest request) {
+    public DefaultConnectorServletRequest(FullHttpRequest request) {
         this.fullHttpRequest = request;
     }
 

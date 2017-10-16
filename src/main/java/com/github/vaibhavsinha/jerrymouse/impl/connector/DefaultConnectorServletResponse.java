@@ -1,7 +1,8 @@
-package com.github.vaibhavsinha.jerrymouse.model;
+package com.github.vaibhavsinha.jerrymouse.impl.connector;
 
+import com.github.vaibhavsinha.jerrymouse.impl.connector.ByteBufServletOutputStream;
+import com.github.vaibhavsinha.jerrymouse.impl.connector.ByteBufWriter;
 import io.netty.handler.codec.http.*;
-import io.netty.handler.codec.http.cookie.*;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 
@@ -16,11 +17,11 @@ import java.util.Locale;
 /**
  * Created by vaibhav on 14/10/17.
  */
-public class JerryMouseServletResponse implements HttpServletResponse {
+public class DefaultConnectorServletResponse implements HttpServletResponse {
 
     private FullHttpResponse fullHttpResponse;
 
-    public JerryMouseServletResponse() {
+    public DefaultConnectorServletResponse() {
         fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
     }
 
