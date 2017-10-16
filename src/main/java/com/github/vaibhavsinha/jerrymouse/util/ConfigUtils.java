@@ -6,6 +6,7 @@ import com.github.vaibhavsinha.jerrymouse.model.descriptor.WebAppType;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.File;
@@ -49,7 +50,7 @@ public class ConfigUtils {
         File file = new File(home + "/webapps/ROOT/WEB-INF/web.xml");
         JAXBContext jaxbContext = JAXBContext.newInstance(WebAppType.class);
         Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-        return (WebAppType) unmarshaller.unmarshal(file);
+        return ((JAXBElement<WebAppType>) unmarshaller.unmarshal(file)).getValue();
     }
 
     private static URLClassLoader getUrlClassLoader() throws IOException {
