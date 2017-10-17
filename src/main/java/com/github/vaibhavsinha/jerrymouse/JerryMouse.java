@@ -24,10 +24,11 @@ public class JerryMouse {
     }
 
     private void run() throws Exception {
-        Thread.currentThread().setContextClassLoader(ConfigUtils.loader);
         container = new DefaultContext();
         container.setName("Root Context");
         ((DefaultContext) container).setWebAppObj(ConfigUtils.webApp);
+        ((DefaultContext) container).setDocBase("ROOT");
+        ((DefaultContext) container).setContextPath("/");
         container.start();
 
         connector = new DefaultHttpConnector();

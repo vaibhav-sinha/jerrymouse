@@ -23,7 +23,6 @@ public class ServletRequestChannelHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        Thread.currentThread().setContextClassLoader(ConfigUtils.loader);
 
         FullHttpRequest request = (FullHttpRequest) msg;
         DefaultConnectorServletRequest servletRequest = new DefaultConnectorServletRequest(request);

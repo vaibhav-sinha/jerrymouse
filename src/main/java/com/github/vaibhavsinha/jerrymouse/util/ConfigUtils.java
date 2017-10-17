@@ -28,13 +28,11 @@ public class ConfigUtils {
     public final static String home = System.getenv("JERRYMOUSE_HOME");
     public final static Config config;
     public final static WebAppType webApp;
-    public final static ClassLoader loader;
 
     static {
         try {
             config = getConfig();
             webApp = getWebApp();
-            loader = getUrlClassLoader();
         }
         catch (IOException | JAXBException e) {
             throw new RuntimeException(e);
@@ -52,28 +50,5 @@ public class ConfigUtils {
         Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
         return ((JAXBElement<WebAppType>) unmarshaller.unmarshal(file)).getValue();
     }
-
-    private static URLClassLoader getUrlClassLoader() throws IOException {
-        List<URL> urlList = new ArrayList<>();
-        File classpath1 = new File(ConfigUtils.home + "/webapps/ROOT/WEB-INF/classes/");
-        String repository1 = new URL("file", null, classpath1.getCanonicalPath() + File.separator).toString();
-        urlList.add(new URL(null, repository1));
-
-        File lib = new File(ConfigUtils.home + "/webapps/ROOT/WEB-INF/lib/");
-        List<URL> jars = Arrays.stream(lib.listFiles()).filter(File::isFile).map(file -> {
-            String repository2 = null;
-            try {
-                repository2 = new URL("file", null, file.getCanonicalPath()).toString();
-                return new URL(null, repository2);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }).collect(Collectors.toList());
-
-        urlList.addAll(jars);
-
-        return new URLClassLoader(urlList.toArray(new URL[0]));
-    }
-
 
 }

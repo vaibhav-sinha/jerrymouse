@@ -1,6 +1,7 @@
 package com.github.vaibhavsinha.jerrymouse.impl.container;
 
 import com.github.vaibhavsinha.jerrymouse.model.JerryMouseServletConfig;
+import com.github.vaibhavsinha.jerrymouse.model.api.Context;
 import com.github.vaibhavsinha.jerrymouse.model.api.Lifecycle;
 import com.github.vaibhavsinha.jerrymouse.model.api.LifecycleException;
 import com.github.vaibhavsinha.jerrymouse.model.api.Wrapper;
@@ -41,7 +42,7 @@ public class DefaultWrapper extends DefaultAbstractContainer implements Wrapper 
     @Override
     public void load() throws Exception {
         if(instance == null) {
-            Class<Servlet> servletClass = (Class<Servlet>) ConfigUtils.loader.loadClass(servletObj.getServletClass().getValue());
+            Class<Servlet> servletClass = (Class<Servlet>) ((Context) parent).getClassLoader().loadClass(servletObj.getServletClass().getValue());
             instance = servletClass.newInstance();
             JerryMouseServletConfig config = new JerryMouseServletConfig();
             config.setName(servletObj.getServletName().getValue());

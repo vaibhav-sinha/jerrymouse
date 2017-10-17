@@ -2,16 +2,19 @@ package com.github.vaibhavsinha.jerrymouse.impl.container;
 
 import com.github.vaibhavsinha.jerrymouse.ApplicationContext;
 import com.github.vaibhavsinha.jerrymouse.impl.connector.DefaultConnectorServletResponse;
+import com.github.vaibhavsinha.jerrymouse.impl.loader.WebappLoader;
 import com.github.vaibhavsinha.jerrymouse.model.api.*;
 import com.github.vaibhavsinha.jerrymouse.model.descriptor.*;
 import com.github.vaibhavsinha.jerrymouse.util.ConfigUtils;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.xml.bind.JAXBElement;
 import java.io.IOException;
+import java.lang.String;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,6 +24,7 @@ import java.util.List;
 /**
  * Created by vaibhav on 16/10/17.
  */
+@Slf4j
 public class DefaultContext extends DefaultAbstractContainer implements Context {
 
     private WebAppType webAppObj;
@@ -28,10 +32,14 @@ public class DefaultContext extends DefaultAbstractContainer implements Context 
     private ApplicationContext applicationContext;
     private List<EventListener> eventListeners = new ArrayList<>();
     private boolean started = false;
+    private String docBase;
+    private String contextPath;
+    private Loader loader;
 
 
     @Override
     public void invoke(ServletRequest request, ServletResponse response) throws ServletException, IOException {
+        Thread.currentThread().setContextClassLoader(loader.getClassLoader());
         DefaultConnectorServletResponse servletResponse = (DefaultConnectorServletResponse) response;
         Container wrapper = mapper.map(request);
         if(wrapper != null) {
@@ -50,6 +58,36 @@ public class DefaultContext extends DefaultAbstractContainer implements Context 
     }
 
     @Override
+    public void setDocBase(String docBase) {
+        this.docBase = docBase;
+    }
+
+    @Override
+    public void setContextPath(String contextPath) {
+        this.contextPath = contextPath;
+    }
+
+    @Override
+    public String getDocBase() {
+        return docBase;
+    }
+
+    @Override
+    public String getContextPath() {
+        return contextPath;
+    }
+
+    @Override
+    public ClassLoader getClassLoader() {
+        return loader.getClassLoader();
+    }
+
+    @Override
+    public void reload() {
+        log.info("Context reloading");
+    }
+
+    @Override
     public void start() throws LifecycleException {
         if(started) {
             throw new LifecycleException(new Throwable("Container already started"));
@@ -58,8 +96,15 @@ public class DefaultContext extends DefaultAbstractContainer implements Context 
         started = true;
         mapper = new DefaultMapper();
         mapper.setContainer(this);
+        mapper.start();
 
-        applicationContext = new ApplicationContext();
+        loader = new WebappLoader();
+        loader.setContainer(this);
+        loader.start();
+
+        Thread.currentThread().setContextClassLoader(loader.getClassLoader());
+
+        applicationContext = new ApplicationContext(this);
         for(JAXBElement obj: webAppObj.getObjects()) {
             if(obj.getDeclaredType() == ParamValueType.class) {
                 applicationContext.addParamValueType((ParamValueType)obj.getValue());
@@ -74,7 +119,7 @@ public class DefaultContext extends DefaultAbstractContainer implements Context 
             }
             if(obj.getDeclaredType() == ListenerType.class) {
                 try {
-                    Class<EventListener> listenerClass = (Class<EventListener>) ConfigUtils.loader.loadClass(((ListenerType) obj.getValue()).getListenerClass().getValue());
+                    Class<EventListener> listenerClass = (Class<EventListener>) loader.getClassLoader().loadClass(((ListenerType) obj.getValue()).getListenerClass().getValue());
                     eventListeners.add(listenerClass.newInstance());
                 } catch (Exception e) {
                     throw new LifecycleException(e);
@@ -96,6 +141,7 @@ public class DefaultContext extends DefaultAbstractContainer implements Context 
         lifecycleSupport.fireLifecycleEvent(Lifecycle.BEFORE_STOP_EVENT, null);
         started = false;
         mapper.stop();
+        loader.stop();
         for(Container child : findChildren()) {
             child.stop();
         }

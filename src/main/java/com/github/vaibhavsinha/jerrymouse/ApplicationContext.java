@@ -1,5 +1,6 @@
 package com.github.vaibhavsinha.jerrymouse;
 
+import com.github.vaibhavsinha.jerrymouse.model.api.Context;
 import com.github.vaibhavsinha.jerrymouse.model.descriptor.ParamValueType;
 import com.github.vaibhavsinha.jerrymouse.util.ConfigUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,12 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ApplicationContext implements ServletContext {
 
+    private Context context;
+
+    public ApplicationContext(Context context) {
+        this.context = context;
+    }
+
     private List<ParamValueType> paramValueTypeList = new ArrayList<>();
 
     public void addParamValueType(ParamValueType paramValueType) {
@@ -29,7 +36,7 @@ public class ApplicationContext implements ServletContext {
 
     @Override
     public String getContextPath() {
-        return "/";
+        return context.getContextPath();
     }
 
     @Override
@@ -75,7 +82,7 @@ public class ApplicationContext implements ServletContext {
     @Override
     public InputStream getResourceAsStream(String path) {
         try {
-            return new FileInputStream(new File(ConfigUtils.home + "/webapps/ROOT/" + path));
+            return new FileInputStream(new File(ConfigUtils.home + "/webapps/" + context.getDocBase() + "/" + path));
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -289,7 +296,7 @@ public class ApplicationContext implements ServletContext {
 
     @Override
     public ClassLoader getClassLoader() {
-        return ConfigUtils.loader;
+        return context.getClassLoader();
     }
 
     @Override

@@ -8,4 +8,10 @@ import com.github.vaibhavsinha.jerrymouse.model.descriptor.WebAppType;
 public interface Context extends Container {
 
     void setWebAppObj(WebAppType webAppObj);
+    void setDocBase(String docBase);
+    void setContextPath(String contextPath);
+    String getDocBase();
+    String getContextPath();
+    ClassLoader getClassLoader();
+    void reload();
 }
