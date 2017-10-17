@@ -1,5 +1,7 @@
 package com.github.vaibhavsinha.jerrymouse.impl.container;
 
+import com.github.vaibhavsinha.jerrymouse.impl.connector.DefaultConnectorServletRequest;
+import com.github.vaibhavsinha.jerrymouse.impl.manager.Session;
 import com.github.vaibhavsinha.jerrymouse.model.JerryMouseServletConfig;
 import com.github.vaibhavsinha.jerrymouse.model.api.Context;
 import com.github.vaibhavsinha.jerrymouse.model.api.Lifecycle;
@@ -9,6 +11,9 @@ import com.github.vaibhavsinha.jerrymouse.model.descriptor.ServletType;
 import com.github.vaibhavsinha.jerrymouse.util.ConfigUtils;
 
 import javax.servlet.*;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 /**
@@ -17,7 +22,7 @@ import java.io.IOException;
 public class DefaultWrapper extends DefaultAbstractContainer implements Wrapper {
 
     private ServletType servletObj;
-    private ServletContext servletContext;
+    private Context context;
     private Servlet instance;
     private Boolean started = false;
 
@@ -27,8 +32,8 @@ public class DefaultWrapper extends DefaultAbstractContainer implements Wrapper 
     }
 
     @Override
-    public void setServletContext(ServletContext context) {
-        this.servletContext = context;
+    public void setContext(Context context) {
+        this.context = context;
     }
 
     @Override
@@ -47,14 +52,20 @@ public class DefaultWrapper extends DefaultAbstractContainer implements Wrapper 
             JerryMouseServletConfig config = new JerryMouseServletConfig();
             config.setName(servletObj.getServletName().getValue());
             config.setParamValueTypeList(servletObj.getInitParam());
-            config.setServletContext(servletContext);
+            config.setServletContext(context.getServletContext());
             instance.init(config);
         }
     }
 
     @Override
     public void invoke(ServletRequest request, ServletResponse response) throws ServletException, IOException {
+        ((DefaultConnectorServletRequest)request).setContext(context);
         instance.service(request, response);
+        HttpSession session = ((DefaultConnectorServletRequest) request).getSession(false);
+        if(session != null) {
+            Cookie cookie = new Cookie("JSESSIONID", session.getId());
+            ((HttpServletResponse) response).addCookie(cookie);
+        }
     }
 
     @Override

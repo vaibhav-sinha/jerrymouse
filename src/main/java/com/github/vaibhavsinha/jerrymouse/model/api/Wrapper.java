@@ -11,7 +11,7 @@ import javax.servlet.ServletContext;
 public interface Wrapper extends Container {
 
     void setServletObj(ServletType servletObj);
-    void setServletContext(ServletContext context);
+    void setContext(Context context);
     Servlet allocate() throws Exception;
     void load() throws Exception;
 }

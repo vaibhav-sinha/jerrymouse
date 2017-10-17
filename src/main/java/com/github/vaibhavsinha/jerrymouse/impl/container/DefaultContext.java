@@ -3,21 +3,20 @@ package com.github.vaibhavsinha.jerrymouse.impl.container;
 import com.github.vaibhavsinha.jerrymouse.ApplicationContext;
 import com.github.vaibhavsinha.jerrymouse.impl.connector.DefaultConnectorServletResponse;
 import com.github.vaibhavsinha.jerrymouse.impl.loader.WebappLoader;
+import com.github.vaibhavsinha.jerrymouse.impl.manager.DefaultManager;
 import com.github.vaibhavsinha.jerrymouse.model.api.*;
 import com.github.vaibhavsinha.jerrymouse.model.descriptor.*;
-import com.github.vaibhavsinha.jerrymouse.util.ConfigUtils;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.xml.bind.JAXBElement;
 import java.io.IOException;
 import java.lang.String;
-import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EventListener;
 import java.util.List;
 
@@ -35,6 +34,7 @@ public class DefaultContext extends DefaultAbstractContainer implements Context 
     private String docBase;
     private String contextPath;
     private Loader loader;
+    private Manager manager;
 
 
     @Override
@@ -88,12 +88,23 @@ public class DefaultContext extends DefaultAbstractContainer implements Context 
     }
 
     @Override
+    public ServletContext getServletContext() {
+        return applicationContext;
+    }
+
+    @Override
+    public Manager getManager() {
+        return manager;
+    }
+
+    @Override
     public void start() throws LifecycleException {
         if(started) {
             throw new LifecycleException(new Throwable("Container already started"));
         }
         lifecycleSupport.fireLifecycleEvent(Lifecycle.BEFORE_START_EVENT, null);
         started = true;
+
         mapper = new DefaultMapper();
         mapper.setContainer(this);
         mapper.start();
@@ -101,6 +112,11 @@ public class DefaultContext extends DefaultAbstractContainer implements Context 
         loader = new WebappLoader();
         loader.setContainer(this);
         loader.start();
+
+        manager = new DefaultManager();
+        manager.setContainer(this);
+        manager.setMaxInactiveInterval(30000);
+        manager.start();
 
         Thread.currentThread().setContextClassLoader(loader.getClassLoader());
 
@@ -111,7 +127,7 @@ public class DefaultContext extends DefaultAbstractContainer implements Context 
             }
             if(obj.getDeclaredType() == ServletType.class) {
                 Wrapper wrapper = new DefaultWrapper();
-                wrapper.setServletContext(applicationContext);
+                wrapper.setContext(this);
                 wrapper.setServletObj((ServletType) obj.getValue());
                 wrapper.setParent(this);
                 wrapper.start();

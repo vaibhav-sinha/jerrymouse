@@ -1,6 +1,7 @@
 package com.github.vaibhavsinha.jerrymouse.impl.connector;
 
-import com.github.vaibhavsinha.jerrymouse.impl.connector.ByteBufServletInputStream;
+import com.github.vaibhavsinha.jerrymouse.impl.manager.Session;
+import com.github.vaibhavsinha.jerrymouse.model.api.Context;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.QueryStringDecoder;
@@ -23,10 +24,16 @@ public class DefaultConnectorServletRequest implements HttpServletRequest {
     private FullHttpRequest fullHttpRequest;
     private String pathInfo;
     private String servletPath;
+    private Context context;
+    private Session session;
 
 
     public DefaultConnectorServletRequest() {
 
+    }
+
+    public void setContext(Context context) {
+        this.context = context;
     }
 
     public void setServletPath(String servletPath) {
@@ -45,7 +52,10 @@ public class DefaultConnectorServletRequest implements HttpServletRequest {
 
     @Override
     public Cookie[] getCookies() {
-        return ServerCookieDecoder.STRICT.decode(fullHttpRequest.headers().get(HttpHeaderNames.COOKIE)).stream().map(c -> new Cookie(c.name(), c.value())).collect(Collectors.toList()).toArray(new Cookie[0]);
+        if(fullHttpRequest.headers().get(HttpHeaderNames.COOKIE) != null) {
+            return ServerCookieDecoder.STRICT.decode(fullHttpRequest.headers().get(HttpHeaderNames.COOKIE)).stream().map(c -> new Cookie(c.name(), c.value())).collect(Collectors.toList()).toArray(new Cookie[0]);
+        }
+        return new Cookie[0];
     }
 
     @Override
@@ -90,7 +100,7 @@ public class DefaultConnectorServletRequest implements HttpServletRequest {
 
     @Override
     public String getContextPath() {
-        return "/";
+        return context.getContextPath();
     }
 
     @Override
@@ -136,12 +146,27 @@ public class DefaultConnectorServletRequest implements HttpServletRequest {
 
     @Override
     public HttpSession getSession(boolean create) {
-        return null;
+        if(context == null) {
+            return null;
+        }
+        if(session != null && session.isValid()) {
+            session.access();
+            return session;
+        }
+        if(isRequestedSessionIdValid()) {
+            session.access();
+            return session;
+        }
+        if(!create) {
+            return null;
+        }
+        session = context.getManager().createSession();
+        return session;
     }
 
     @Override
     public HttpSession getSession() {
-        return null;
+        return getSession(true);
     }
 
     @Override
@@ -151,12 +176,22 @@ public class DefaultConnectorServletRequest implements HttpServletRequest {
 
     @Override
     public boolean isRequestedSessionIdValid() {
+        Cookie cookie = Arrays.stream(getCookies()).filter(c -> c.getName().equals("JSESSIONID")).findFirst().orElse(null);
+        if(cookie != null) {
+            try {
+                session = context.getManager().findSession(cookie.getValue());
+                return session != null && session.isValid();
+            } catch (IOException e) {
+                session = null;
+                return false;
+            }
+        }
         return false;
     }
 
     @Override
     public boolean isRequestedSessionIdFromCookie() {
-        return false;
+        return true;
     }
 
     @Override
