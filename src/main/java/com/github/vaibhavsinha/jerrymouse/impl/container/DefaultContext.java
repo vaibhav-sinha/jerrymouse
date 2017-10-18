@@ -1,6 +1,6 @@
 package com.github.vaibhavsinha.jerrymouse.impl.container;
 
-import com.github.vaibhavsinha.jerrymouse.ApplicationContext;
+import com.github.vaibhavsinha.jerrymouse.impl.spec.ApplicationContext;
 import com.github.vaibhavsinha.jerrymouse.impl.connector.DefaultConnectorServletResponse;
 import com.github.vaibhavsinha.jerrymouse.impl.loader.WebappLoader;
 import com.github.vaibhavsinha.jerrymouse.impl.manager.DefaultManager;
@@ -30,6 +30,8 @@ public class DefaultContext extends DefaultAbstractContainer implements Context 
     private Mapper mapper;
     private ApplicationContext applicationContext;
     private List<EventListener> eventListeners = new ArrayList<>();
+    private List<FilterType> filterObjs = new ArrayList<>();
+    private List<FilterMappingType> filterMappingObjs = new ArrayList<>();
     private boolean started = false;
     private String docBase;
     private String contextPath;
@@ -130,7 +132,6 @@ public class DefaultContext extends DefaultAbstractContainer implements Context 
                 wrapper.setContext(this);
                 wrapper.setServletObj((ServletType) obj.getValue());
                 wrapper.setParent(this);
-                wrapper.start();
                 addChild(wrapper);
             }
             if(obj.getDeclaredType() == ListenerType.class) {
@@ -144,7 +145,20 @@ public class DefaultContext extends DefaultAbstractContainer implements Context 
             if(obj.getDeclaredType() == ServletMappingType.class) {
                 mapper.addServletMapping((ServletMappingType) obj.getValue());
             }
+            if(obj.getDeclaredType() == FilterType.class) {
+                filterObjs.add((FilterType) obj.getValue());
+            }
+            if(obj.getDeclaredType() == FilterMappingType.class) {
+                filterMappingObjs.add((FilterMappingType) obj.getValue());
+            }
         }
+
+        for(Container child : children) {
+            ((Wrapper) child).setFilterObjs(filterObjs);
+            ((Wrapper) child).setFilterMappingObjs(filterMappingObjs);
+            child.start();
+        }
+
         lifecycleSupport.fireLifecycleEvent(Lifecycle.START_EVENT, null);
         lifecycleSupport.fireLifecycleEvent(Lifecycle.AFTER_START_EVENT, null);
     }

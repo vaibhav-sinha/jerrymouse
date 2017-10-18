@@ -1,4 +1,4 @@
-package com.github.vaibhavsinha.jerrymouse;
+package com.github.vaibhavsinha.jerrymouse.impl.spec;
 
 import com.github.vaibhavsinha.jerrymouse.model.api.Context;
 import com.github.vaibhavsinha.jerrymouse.model.descriptor.ParamValueType;

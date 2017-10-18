@@ -1,6 +1,5 @@
-package com.github.vaibhavsinha.jerrymouse.model;
+package com.github.vaibhavsinha.jerrymouse.impl.spec;
 
-import com.github.vaibhavsinha.jerrymouse.ApplicationContext;
 import com.github.vaibhavsinha.jerrymouse.model.descriptor.ParamValueType;
 
 import javax.servlet.ServletConfig;
@@ -13,7 +12,7 @@ import java.util.stream.Collectors;
 /**
  * Created by vaibhav on 15/10/17.
  */
-public class JerryMouseServletConfig implements ServletConfig {
+public class ApplicationServletConfig implements ServletConfig {
 
     private String name;
     private List<ParamValueType> paramValueTypeList;
