@@ -155,6 +155,10 @@ public class DefaultWrapper extends DefaultAbstractContainer implements Wrapper 
     }
 
     private Filter getFilterByName(String name) {
-        return filters.entrySet().stream().filter(e -> e.getKey().equals(name)).findFirst().get().getValue();
+        Map.Entry<String, Filter> entry = filters.entrySet().stream().filter(e -> e.getKey().equals(name)).findFirst().orElse(null);
+        if(entry == null) {
+            throw new RuntimeException("Filter " + name + " specified in filter mapping is not defined");
+        }
+        return entry.getValue();
     }
 }
